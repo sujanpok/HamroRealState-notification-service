@@ -1,12 +1,12 @@
-# Dockerfile
 FROM node:18-alpine
-
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm install --production
+RUN npm install
 
 COPY . .
 
-EXPOSE 3000
-CMD ["node", "server.js"]
+# CRITICAL: Set PORT explicitly
+ENV PORT=3004
+EXPOSE 3004
+CMD ["npm", "start"]
