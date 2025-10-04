@@ -40,3 +40,37 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - containerPort: {{ .Values.service.targetPort }}
+              hostPort: {{ .Values.service.targetPort }}
+          env:
+            - name: NODE_ENV
+              value: {{ .Values.env.NODE_ENV | quote }}
+            - name: PORT
+              value: {{ .Values.env.PORT | quote }}
+            - name: EMAIL_DOMAIN
+              value: {{ .Values.env.EMAIL_DOMAIN | quote }}
+            - name: RESEND_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-secret
+                  key: RESEND_API_KEY
+            - name: AUTH_HEADER_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-secret
+                  key: AUTH_HEADER_KEY
+          {{- if .Values.livenessProbe }}
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe | nindent 10 }}
+          {{- end }}
+          {{- if .Values.readinessProbe }}
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe | nindent 10 }}
+          {{- end }}
+          {{- if .Values.resources }}
+          resources:
+            {{- toYaml .Values.resources | nindent 10 }}
+          {{- end }}
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "sleep 10"]
