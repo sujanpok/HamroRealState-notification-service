@@ -4,18 +4,12 @@ appName: notification-service
 
 image:
   repository: sujan1234ray/notification-service
-  pullPolicy: IfNotPresent
   tag: "latest"
 
 color: blue
 
 service:
-  type: LoadBalancer
-  port: 80
   targetPort: 3004
-  serviceName: notification-service
-  loadBalancerIP: 192.168.1.204
-  nodePort: 30084
 
 env:
   NODE_ENV: "production"
@@ -25,41 +19,3 @@ env:
 secrets:
   RESEND_API_KEY: ""
   AUTH_HEADER_KEY: ""
-
-resources:
-  limits:
-    cpu: 500m
-    memory: 512Mi
-  requests:
-    cpu: 250m
-    memory: 256Mi
-
-livenessProbe:
-  httpGet:
-    path: /health
-    port: 3004
-  initialDelaySeconds: 20
-  periodSeconds: 10
-  timeoutSeconds: 3
-  failureThreshold: 3
-  successThreshold: 1
-
-readinessProbe:
-  httpGet:
-    path: /health
-    port: 3004
-  initialDelaySeconds: 5
-  periodSeconds: 5
-  timeoutSeconds: 3
-  failureThreshold: 3
-  successThreshold: 1
-
-imagePullSecrets:
-  - name: docker-hub-credentials
-
-nodeSelector:
-  kubernetes.io/arch: arm64
-
-tolerations: []
-
-affinity: {}
