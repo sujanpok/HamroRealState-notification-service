@@ -132,16 +132,16 @@ pipeline {
 
                         sh '''
                             helm upgrade --install ${NEW_RELEASE} ${HELM_CHART_PATH} \
-                                --values ${HELM_CHART_PATH}/values.yaml \
-                                --set color=${NEW_COLOR} \
-                                --set image.repository=${DOCKER_IMAGE} \
-                                --set image.tag=${DOCKER_TAG} \
-                                --set env.NODE_ENV=${NODE_ENV} \
-                                --set env.PORT=${APP_PORT} \
-                                --set env.EMAIL_DOMAIN=${EMAIL_DOMAIN} \
-                                --set env.RESEND_API_KEY=${RESEND_API_KEY} \
-                                --set env.AUTH_HEADER_KEY=${AUTH_HEADER_KEY} \
-                                --namespace ${K3S_NAMESPACE}
+                              --values ${HELM_CHART_PATH}/values.yaml \
+                              --set color=${NEW_COLOR} \
+                              --set image.repository=${DOCKER_IMAGE} \
+                              --set image.tag=${DOCKER_TAG} \
+                              --set env.NODE_ENV=${NODE_ENV} \
+                              --set env.PORT=${APP_PORT} \
+                              --set env.EMAIL_DOMAIN=${EMAIL_DOMAIN} \
+                              --set secrets.RESEND_API_KEY=${RESEND_API_KEY} \
+                              --set secrets.AUTH_HEADER_KEY=${AUTH_HEADER_KEY} \
+                              --namespace ${K3S_NAMESPACE}
                         '''
                         
                         // Wait for rollout
