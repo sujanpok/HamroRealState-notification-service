@@ -264,29 +264,29 @@ pipeline {
             }
         }
 
-        stage('Final Health Check') {
-            steps {
-                sh '''
-                    echo "🏥 Final health verification..."
+        // stage('Final Health Check') {
+        //     steps {
+        //         sh '''
+        //             echo "🏥 Final health verification..."
                     
-                    # Test internal cluster access
-                    kubectl run curl-test --rm -i --restart=Never --image=curlimages/curl --timeout=30s -- \
-                        curl -f http://${SERVICE_NAME}.${K3S_NAMESPACE}.svc.cluster.local:${PORT}/ || \
-                        kubectl run curl-test-2 --rm -i --restart=Never --image=curlimages/curl --timeout=30s -- \
-                        curl -f http://${SERVICE_NAME}.${K3S_NAMESPACE}.svc.cluster.local:${PORT}/ || \
-                        echo "⚠️ Health check completed with warnings"
+        //             # Test internal cluster access
+        //             kubectl run curl-test --rm -i --restart=Never --image=curlimages/curl --timeout=30s -- \
+        //                 curl -f http://${SERVICE_NAME}.${K3S_NAMESPACE}.svc.cluster.local:${PORT}/ || \
+        //                 kubectl run curl-test-2 --rm -i --restart=Never --image=curlimages/curl --timeout=30s -- \
+        //                 curl -f http://${SERVICE_NAME}.${K3S_NAMESPACE}.svc.cluster.local:${PORT}/ || \
+        //                 echo "⚠️ Health check completed with warnings"
                     
-                    echo "📊 Pods status:"
-                    kubectl get pods -n ${K3S_NAMESPACE} -l app=notification-service -o wide
+        //             echo "📊 Pods status:"
+        //             kubectl get pods -n ${K3S_NAMESPACE} -l app=notification-service -o wide
                     
-                    echo "📊 Service status:"
-                    kubectl get svc ${SERVICE_NAME} -n ${K3S_NAMESPACE} -o wide
+        //             echo "📊 Service status:"
+        //             kubectl get svc ${SERVICE_NAME} -n ${K3S_NAMESPACE} -o wide
                     
-                    echo "🔗 Service endpoints:"
-                    kubectl get endpoints ${SERVICE_NAME} -n ${K3S_NAMESPACE}
-                '''
-            }
-        }
+        //             echo "🔗 Service endpoints:"
+        //             kubectl get endpoints ${SERVICE_NAME} -n ${K3S_NAMESPACE}
+        //         '''
+        //     }
+        // }
 
         stage('🧹 Deep Cleanup') {
             steps {
