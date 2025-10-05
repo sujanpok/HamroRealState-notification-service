@@ -5,7 +5,9 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     app: {{ .Values.appName | default "notification-service" }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    release: {{ .Release.Name }}
 data:
-  NODE_ENV: {{ .Values.env.NODE_ENV | quote }}
-  PORT: {{ .Values.env.PORT | quote }}
-  EMAIL_DOMAIN: {{ .Values.env.EMAIL_DOMAIN | quote }}
+  {{- range $key, $value := .Values.env }}
+  {{ $key }}: {{ $value | quote }}
+  {{- end }}
