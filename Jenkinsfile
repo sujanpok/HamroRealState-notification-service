@@ -12,7 +12,7 @@ pipeline {
         KUBECONFIG = '/var/lib/jenkins/k3s.yaml'
 
         // App configs
-        APP_NAME   = 'notification--service'
+        APP_NAME   = 'notification-service'
         APP_DIR    = "${WORKSPACE}"
         PORT       = '80'  // Service port (external for LoadBalancer)
         APP_PORT   = '3004'  // Pod/container port where app listens
@@ -22,7 +22,7 @@ pipeline {
         // k3s and Helm configs
         HELM_CHART_PATH = './helm'  // Path to your Helm chart
         K3S_NAMESPACE   = 'default'  // Or your preferred namespace
-        SERVICE_NAME    = 'notification--service'  // Fixed service name for traffic switching
+        SERVICE_NAME    = 'notification-service'  // Fixed service name for traffic switching
 
         // Blue-Green specific
         BLUE_LABEL = 'blue'
@@ -58,8 +58,8 @@ pipeline {
                     // Detect current active color (default to blue if not found)
                     env.CURRENT_ACTIVE = sh(script: "kubectl get svc ${SERVICE_NAME} -n ${K3S_NAMESPACE} -o jsonpath='{.spec.selector.color}' 2>/dev/null || echo '${BLUE_LABEL}'", returnStdout: true).trim()
                     env.NEW_COLOR = (env.CURRENT_ACTIVE == BLUE_LABEL) ? GREEN_LABEL : BLUE_LABEL
-                    env.NEW_RELEASE = "notification--service-${NEW_COLOR}"
-                    env.OLD_RELEASE = "notification--service-${(NEW_COLOR == BLUE_LABEL ? GREEN_LABEL : BLUE_LABEL)}"
+                    env.NEW_RELEASE = "notification-service-${NEW_COLOR}"
+                    env.OLD_RELEASE = "notification-service-${(NEW_COLOR == BLUE_LABEL ? GREEN_LABEL : BLUE_LABEL)}"
                     echo "Current active: ${env.CURRENT_ACTIVE} | Deploying to: ${env.NEW_COLOR} (release: ${env.NEW_RELEASE})"
                 }
             }
@@ -139,8 +139,8 @@ pipeline {
                                 --set env.NODE_ENV=${NODE_ENV} \
                                 --set env.PORT=${APP_PORT} \
                                 --set env.EMAIL_DOMAIN=${EMAIL_DOMAIN} \
-                                --set env.RESEND_API_KEY=${RESEND_API_KEY} \
-                                --set env.AUTH_HEADER_KEY=${AUTH_HEADER_KEY} \
+                                --set secrets.RESEND_API_KEY=${RESEND_API_KEY} \
+                                --set secrets.AUTH_HEADER_KEY=${AUTH_HEADER_KEY} \
                                 --namespace ${K3S_NAMESPACE}
                         '''
                         
@@ -152,7 +152,7 @@ pipeline {
                         // Test new deployment directly via port-forward
                         echo "⏳ Testing new container (${NEW_COLOR})..."
                         sh '''
-                            pod=$(kubectl get pod -l app=notification--service,color=${NEW_COLOR} -o jsonpath='{.items[0].metadata.name}' -n ${K3S_NAMESPACE})
+                            pod=$(kubectl get pod -l app=notification-service,color=${NEW_COLOR} -o jsonpath='{.items[0].metadata.name}' -n ${K3S_NAMESPACE})
                             if [ -z "$pod" ]; then
                                 echo "❌ No pod found for ${NEW_COLOR}"
                                 exit 1
@@ -218,7 +218,7 @@ pipeline {
                         echo "⚠️ Health check failed, but deployment may still be working"
                     
                     echo "📊 Pods status:"
-                    kubectl get pods -n ${K3S_NAMESPACE} -l app=notification--service -o wide
+                    kubectl get pods -n ${K3S_NAMESPACE} -l app=notification-service -o wide
                     
                     echo "📊 Service status:"
                     kubectl get svc ${SERVICE_NAME} -n ${K3S_NAMESPACE} -o wide
@@ -276,9 +276,9 @@ pipeline {
         failure {
             sh '''
                 echo "❌ Deployment failed - emergency cleanup..."
-                kubectl delete pod -n ${K3S_NAMESPACE} -l app=notification--service --force --grace-period=0 || true
-                kubectl logs -n ${K3S_NAMESPACE} -l app=notification--service --tail=100 || true
-                kubectl describe pods -n ${K3S_NAMESPACE} -l app=notification--service || true
+                kubectl delete pod -n ${K3S_NAMESPACE} -l app=notification-service --force --grace-period=0 || true
+                kubectl logs -n ${K3S_NAMESPACE} -l app=notification-service --tail=100 || true
+                kubectl describe pods -n ${K3S_NAMESPACE} -l app=notification-service || true
                 kubectl get events -n ${K3S_NAMESPACE} --sort-by='.lastTimestamp' | tail -20 || true
                 docker container prune -f || true
                 docker image prune -f || true
@@ -291,7 +291,7 @@ pipeline {
                 echo "📦 Image: ${DOCKER_IMAGE}:${DOCKER_TAG}"
                 echo "🌐 Internal access: http://${SERVICE_NAME}.${K3S_NAMESPACE}.svc.cluster.local:${PORT}"
                 echo "📊 Final system status:"
-                kubectl get pods -n ${K3S_NAMESPACE} -l app=notification--service --no-headers -o custom-columns="NAME:.metadata.name,STATUS:.status.phase" || true
+                kubectl get pods -n ${K3S_NAMESPACE} -l app=notification-service --no-headers -o custom-columns="NAME:.metadata.name,STATUS:.status.phase" || true
                 free -h | head -2 || echo "Memory info not available"
             '''
         }
