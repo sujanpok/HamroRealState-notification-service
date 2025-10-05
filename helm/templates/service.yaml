@@ -3,14 +3,15 @@ kind: Service
 metadata:
   name: {{ .Values.appName }}
   namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ .Values.appName | default "notification-service" }}
 spec:
   type: {{ .Values.service.type }}
-  selector:
-    app: {{ .Values.appName }}
+  loadBalancerIP: {{ .Values.service.loadBalancerIP | default "192.168.1.204" }}  # Fixed EXTERNAL-IP
   ports:
-  - protocol: TCP
-    port: {{ .Values.service.port }}
+  - port: {{ .Values.service.port }}
     targetPort: {{ .Values.service.targetPort }}
-  {{- if .Values.service.loadBalancerIP }}
-  loadBalancerIP: {{ .Values.service.loadBalancerIP }}
-  {{- end }}
+    protocol: TCP
+  selector:
+    app: {{ .Values.appName | default "notification-service" }}
+    color: {{ .Values.color }}
