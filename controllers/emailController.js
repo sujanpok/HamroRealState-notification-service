@@ -1,10 +1,8 @@
-// controllers/emailController.js
 import { sendEmail } from '../services/emailService.js';
 
 export async function send(req, res) {
   const { from, to, subject, html } = req.body;
   
-  // Validate required fields
   if (!from || !to || !subject || !html) {
     return res.status(400).json({ 
       error: 'Missing required fields: from, to, subject, html' 
@@ -12,16 +10,16 @@ export async function send(req, res) {
   }
   
   try {
-    // Wait for email to send before responding
-    const data = await sendEmail({ from, to, subject, html });
+    const result = await sendEmail({ from, to, subject, html });
     
+    // The ID is nested in result.data.id, not result.id
     res.json({ 
       success: true, 
-      messageId: data.id 
+      messageId: result.data.id  // ✅ Changed from result.id to result.data.id
     });
     
   } catch (error) {
-    console.error('Controller error:', error);
+    console.error('Email controller error:', error);
     res.status(500).json({ 
       success: false, 
       error: error.message 
