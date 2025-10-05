@@ -4,16 +4,13 @@ metadata:
   name: {{ .Values.appName }}
   namespace: {{ .Release.Namespace }}
 spec:
+  type: {{ .Values.service.type }}
   selector:
     app: {{ .Values.appName }}
   ports:
   - protocol: TCP
     port: {{ .Values.service.port }}
     targetPort: {{ .Values.service.targetPort }}
-    {{- if eq .Values.service.type "NodePort" }}
-    nodePort: {{ .Values.service.nodePort }}
-    {{- end }}
-  type: {{ .Values.service.type }}
   {{- if .Values.service.loadBalancerIP }}
   loadBalancerIP: {{ .Values.service.loadBalancerIP }}
   {{- end }}

@@ -3,10 +3,6 @@ kind: ConfigMap
 metadata:
   name: {{ .Release.Name }}-config
   namespace: {{ .Release.Namespace }}
-  labels:
-    app: {{ .Values.appName | default "notification-service" }}
-    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
-    release: {{ .Release.Name }}
 data:
   {{- range $key, $value := .Values.env }}
   {{ $key }}: {{ $value | quote }}
