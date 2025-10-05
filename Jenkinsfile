@@ -100,17 +100,19 @@ pipeline {
         }
 
         stage('🧹 Cleanup Conflicting Resources') {
-            steps {
-                script {
-                    echo "🧹 Pre-deployment cleanup (service only, keep old deployment for rollback)..."
-                    sh """
-                        kubectl delete service ${SERVICE_NAME} -n ${K3S_NAMESPACE} --ignore-not-found=true
-                        sleep 3
-                        echo "✅ Service cleanup completed"
-                    """
-                }
+            script {
+                echo "🧹 Pre-deployment cleanup (removing all blue resources)..."
+                sh """
+                    kubectl delete deployment notification-service-blue -n default --ignore-not-found=true
+                    kubectl delete service notification-service -n default --ignore-not-found=true
+                    kubectl delete secret notification-service-blue-secret -n default --ignore-not-found=true
+                    kubectl delete configmap notification-service-blue-config -n default --ignore-not-found=true
+                    sleep 3
+                    echo "✅ Cleanup completed"
+                """
             }
         }
+
 
         stage('Blue-Green Deploy to k3s') {
             steps {
