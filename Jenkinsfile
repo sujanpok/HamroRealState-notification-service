@@ -163,7 +163,7 @@ pipeline {
                                 # Test health endpoint with retry
                                 HEALTH_CHECK_PASSED=false
                                 for i in {1..10}; do
-                                    if curl -f http://localhost:8080/health 2>/dev/null; then
+                                    if curl -f http://localhost:8080/ 2>/dev/null; then
                                         echo "✅ New container health check passed!"
                                         HEALTH_CHECK_PASSED=true
                                         kill $PF_PID 2>/dev/null || true
@@ -199,7 +199,7 @@ pipeline {
                             sh '''
                                 sleep 5
                                 kubectl run curl-test-final --rm -i --restart=Never --image=curlimages/curl --timeout=30s -- \
-                                    curl -f http://${SERVICE_NAME}.${K3S_NAMESPACE}.svc.cluster.local:${PORT}/health || \
+                                    curl -f http://${SERVICE_NAME}.${K3S_NAMESPACE}.svc.cluster.local:${PORT}/ || \
                                     kubectl run curl-test-final-2 --rm -i --restart=Never --image=curlimages/curl --timeout=30s -- \
                                     curl -f http://${SERVICE_NAME}.${K3S_NAMESPACE}.svc.cluster.local:${PORT}/ || \
                                     echo "⚠️ Warning: Could not verify service, but deployment may be OK"
@@ -271,7 +271,7 @@ pipeline {
                     
                     # Test internal cluster access
                     kubectl run curl-test --rm -i --restart=Never --image=curlimages/curl --timeout=30s -- \
-                        curl -f http://${SERVICE_NAME}.${K3S_NAMESPACE}.svc.cluster.local:${PORT}/health || \
+                        curl -f http://${SERVICE_NAME}.${K3S_NAMESPACE}.svc.cluster.local:${PORT}/ || \
                         kubectl run curl-test-2 --rm -i --restart=Never --image=curlimages/curl --timeout=30s -- \
                         curl -f http://${SERVICE_NAME}.${K3S_NAMESPACE}.svc.cluster.local:${PORT}/ || \
                         echo "⚠️ Health check completed with warnings"

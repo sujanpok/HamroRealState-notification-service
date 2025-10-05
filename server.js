@@ -20,11 +20,6 @@ app.use(authMiddleware);
 app.use('/email', emailRoutes);
 app.use('/notification', notificationRoutes);
 
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
 // Listen port
 const port = process.env.PORT || 3000;
 app.listen(port, () => {

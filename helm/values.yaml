@@ -33,22 +33,33 @@ resources:
     cpu: 250m
     memory: 256Mi
 
+# Use root path "/" instead of "/health" to avoid 401 errors
 livenessProbe:
-  tcpSocket:
-    path: /health
+  httpGet:
+    path: /
     port: 3004
   initialDelaySeconds: 20
   periodSeconds: 10
+  timeoutSeconds: 3
+  failureThreshold: 3
+  successThreshold: 1
 
 readinessProbe:
-  tcpSocket:
-    path: /health
+  httpGet:
+    path: /
     port: 3004
   initialDelaySeconds: 5
   periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+  successThreshold: 1
 
 imagePullSecrets:
   - name: docker-hub-credentials
 
 nodeSelector:
   kubernetes.io/arch: arm64
+
+tolerations: []
+
+affinity: {}
