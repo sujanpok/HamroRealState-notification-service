@@ -1,5 +1,4 @@
 import 'dotenv/config';
-
 import express, { json } from 'express';
 import authMiddleware from './middleware/auth.js';
 import emailRoutes from './routes/email.js';
@@ -21,7 +20,7 @@ app.use('/email', emailRoutes);
 app.use('/notification', notificationRoutes);
 
 // Listen port
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3004;
 app.listen(port, () => {
   console.log(`✅ Notification microservice running at http://localhost:${port}`);
 });
