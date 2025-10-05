@@ -34,14 +34,14 @@ resources:
     memory: 256Mi
 
 livenessProbe:
-  httpGet:
+  tcpSocket:
     path: /health
     port: 3004
   initialDelaySeconds: 20
   periodSeconds: 10
 
 readinessProbe:
-  httpGet:
+  tcpSocket:
     path: /health
     port: 3004
   initialDelaySeconds: 5
