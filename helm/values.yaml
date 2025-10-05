@@ -20,6 +20,7 @@ service:
 env:
   NODE_ENV: "production"
   PORT: "3004"
+  HOST: "0.0.0.0"
   EMAIL_DOMAIN: "mail.pokharelsujan.info.np"
 
 secrets:
