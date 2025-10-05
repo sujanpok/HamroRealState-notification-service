@@ -1,17 +1,13 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Values.serviceName | default .Values.appName | default "notification-service" }}
+  name: {{ .Values.appName }}
   namespace: {{ .Release.Namespace }}
-  labels:
-    app: {{ .Values.appName | default "notification-service" }}
 spec:
-  type: {{ .Values.service.type }}
-  loadBalancerIP: {{ .Values.service.loadBalancerIP | default "192.168.1.201" }}  # Fixed EXTERNAL-IP
-  ports:
-  - port: {{ .Values.service.port }}
-    targetPort: {{ .Values.service.targetPort }}
-    protocol: TCP
   selector:
-    app: {{ .Values.appName | default "notification-service" }}
-    color: {{ .Values.color }}
+    app: {{ .Values.appName }}
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: {{ .Values.service.targetPort }}
+  type: LoadBalancer

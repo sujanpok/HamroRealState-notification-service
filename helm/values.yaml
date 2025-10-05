@@ -14,18 +14,14 @@ service:
   port: 80
   targetPort: 3004
   serviceName: notification-service
-  loadBalancerIP: 192.168.1.204  # Fixed external IP
-  nodePort: 30084                # Fixed NodePort (optional)
-  
+  loadBalancerIP: 192.168.1.204
+  nodePort: 30084
 
-# Environment variables for ConfigMap
 env:
-  EMAIL_DOMAIN: mail.pokharelsujan.info.np
+  NODE_ENV: "production"
   PORT: "3004"
-  HOST: "0.0.0.0"
-  NODE_ENV: "production" # Will be overridden by Jenkins
+  EMAIL_DOMAIN: "mail.pokharelsujan.info.np"
 
-# Sensitive variables for Secret
 secrets:
   RESEND_API_KEY: ""
   AUTH_HEADER_KEY: ""
@@ -59,7 +55,7 @@ readinessProbe:
   successThreshold: 1
 
 imagePullSecrets:
-- name: docker-hub-credentials
+  - name: docker-hub-credentials
 
 nodeSelector:
   kubernetes.io/arch: arm64

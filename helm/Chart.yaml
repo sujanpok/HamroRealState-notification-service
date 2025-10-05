@@ -1,5 +1,6 @@
-auth-secret-keyapiVersion: v2
+apiVersion: v2
 name: notification-service
-description: Helm chart for notification-service on k3s with blue-green and MetalLB/Cloudflare support
+description: A Helm chart for Notification Microservice
+type: application
 version: 0.1.0
-appVersion: "1.0.0"
+appVersion: "1.0"
