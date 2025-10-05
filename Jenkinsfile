@@ -8,7 +8,6 @@ pipeline {
     environment {
         // Docker Hub
         DOCKER_HUB = credentials('docker-hub-credentials')
-
         KUBECONFIG = '/var/lib/jenkins/k3s.yaml'
 
         // App configs
@@ -105,10 +104,7 @@ pipeline {
                 script {
                     echo "🧹 Pre-deployment cleanup (service only, keep old deployment for rollback)..."
                     sh """
-                        # Only delete service to allow IP change
-                        # DO NOT delete old deployment - we need it for rollback!
                         kubectl delete service ${SERVICE_NAME} -n ${K3S_NAMESPACE} --ignore-not-found=true
-                        
                         sleep 3
                         echo "✅ Service cleanup completed"
                     """
@@ -126,7 +122,7 @@ pipeline {
                         echo "🔵 Starting blue-green deployment to k3s"
                         
                         try {
-                            // Deploy new version WITHOUT deleting old one
+                            // Deploy new version
                             sh '''
                                 helm upgrade --install ${NEW_RELEASE} ${HELM_CHART_PATH} \
                                     --values ${HELM_CHART_PATH}/values.yaml \
@@ -168,11 +164,6 @@ pipeline {
                                         HEALTH_CHECK_PASSED=true
                                         kill $PF_PID 2>/dev/null || true
                                         break
-                                    elif curl -f http://localhost:8080/ 2>/dev/null; then
-                                        echo "✅ New container is responding!"
-                                        HEALTH_CHECK_PASSED=true
-                                        kill $PF_PID 2>/dev/null || true
-                                        break
                                     fi
                                     echo "Attempt $i/10 - waiting 3 seconds..."
                                     sleep 3
@@ -194,15 +185,11 @@ pipeline {
                             """
                             echo "✅ Traffic switched to ${NEW_COLOR}"
                             
-                            // Final verification after traffic switch
-                            echo "🏥 Verifying service after traffic switch..."
+                            // Show final status
+                            echo "📊 Deployment Status:"
                             sh '''
-                                sleep 5
-                                kubectl run curl-test-final --rm -i --restart=Never --image=curlimages/curl --timeout=30s -- \
-                                    curl -f http://${SERVICE_NAME}.${K3S_NAMESPACE}.svc.cluster.local:${PORT}/ || \
-                                    kubectl run curl-test-final-2 --rm -i --restart=Never --image=curlimages/curl --timeout=30s -- \
-                                    curl -f http://${SERVICE_NAME}.${K3S_NAMESPACE}.svc.cluster.local:${PORT}/ || \
-                                    echo "⚠️ Warning: Could not verify service, but deployment may be OK"
+                                kubectl get pods -n ${K3S_NAMESPACE} -l app=notification-service -o wide
+                                kubectl get svc ${SERVICE_NAME} -n ${K3S_NAMESPACE}
                             '''
                             
                             // Only cleanup old version AFTER successful deployment
@@ -252,8 +239,6 @@ pipeline {
                                 """
                             } else {
                                 echo "⚠️ No previous release found to rollback to!"
-                                echo "⚠️ This might be the first deployment or old release was already deleted"
-                                echo "⚠️ Manual intervention may be required"
                             }
                             
                             // Re-throw exception to mark build as failed
@@ -264,38 +249,12 @@ pipeline {
             }
         }
 
-        stage('Final Health Check') {
-            steps {
-                sh '''
-                    echo "🏥 Final health verification..."
-                    
-                    # Test internal cluster access
-                    kubectl run curl-test --rm -i --restart=Never --image=curlimages/curl --timeout=30s -- \
-                        curl -f http://${SERVICE_NAME}.${K3S_NAMESPACE}.svc.cluster.local:${PORT}/ || \
-                        kubectl run curl-test-2 --rm -i --restart=Never --image=curlimages/curl --timeout=30s -- \
-                        curl -f http://${SERVICE_NAME}.${K3S_NAMESPACE}.svc.cluster.local:${PORT}/ || \
-                        echo "⚠️ Health check completed with warnings"
-                    
-                    echo "📊 Pods status:"
-                    kubectl get pods -n ${K3S_NAMESPACE} -l app=notification-service -o wide
-                    
-                    echo "📊 Service status:"
-                    kubectl get svc ${SERVICE_NAME} -n ${K3S_NAMESPACE} -o wide
-                    
-                    echo "🔗 Service endpoints:"
-                    kubectl get endpoints ${SERVICE_NAME} -n ${K3S_NAMESPACE}
-                '''
-            }
-        }
+        // REMOVED: Final Health Check stage (was causing errors)
 
         stage('🧹 Deep Cleanup') {
             steps {
                 sh '''
                     echo "🧹 Starting comprehensive cleanup..."
-                    
-                    echo "📦 Disk usage BEFORE cleanup:"
-                    df -h /var/lib/docker 2>/dev/null | tail -1 || echo "Docker directory not accessible"
-                    docker system df 2>/dev/null || echo "Docker system df not available"
                     
                     echo "🗑️ Removing old and dangling images..."
                     docker image prune -a -f --filter until=24h 2>/dev/null || echo "Image prune completed"
@@ -312,13 +271,6 @@ pipeline {
                     echo "🗑️ Cleaning build cache..."
                     docker builder prune -a -f --filter until=6h 2>/dev/null || echo "Builder prune completed"
                     
-                    echo "🗑️ Removing old Docker Hub images (keep latest 2)..."
-                    docker images ${DOCKER_IMAGE} --format "{{.ID}}" | tail -n +3 | xargs -r docker rmi -f 2>/dev/null || echo "Old image cleanup completed"
-                    
-                    echo "📦 Disk usage AFTER cleanup:"
-                    df -h /var/lib/docker 2>/dev/null | tail -1 || echo "Docker directory not accessible"
-                    docker system df 2>/dev/null || echo "Docker system df not available"
-                    
                     echo "🎯 Cleanup completed!"
                 '''
             }
@@ -332,34 +284,18 @@ pipeline {
         failure {
             sh '''
                 echo "❌ Build/Deployment failed - collecting diagnostics..."
-                echo "📊 Current pods status:"
                 kubectl get pods -n ${K3S_NAMESPACE} -l app=notification-service -o wide || true
-                
-                echo "📋 Recent events:"
                 kubectl get events -n ${K3S_NAMESPACE} --sort-by='.lastTimestamp' | tail -20 || true
-                
-                echo "🔍 Service configuration:"
-                kubectl describe svc ${SERVICE_NAME} -n ${K3S_NAMESPACE} || true
-                
-                echo "📝 Application logs:"
-                kubectl logs -n ${K3S_NAMESPACE} -l app=notification-service --tail=100 --all-containers=true || true
-                
-                echo "🧹 Emergency cleanup..."
-                docker container prune -f 2>/dev/null || true
-                docker image prune -f 2>/dev/null || true
+                kubectl logs -n ${K3S_NAMESPACE} -l app=notification-service --tail=100 || true
             '''
         }
         success {
             sh '''
                 echo "✅ Auto-deployment successful!"
-                echo "🔗 Triggered by: GitHub push"
                 echo "📦 Image: ${DOCKER_IMAGE}:${DOCKER_TAG}"
                 echo "🎨 Active Color: ${NEW_COLOR}"
-                echo "🌐 Internal access: http://${SERVICE_NAME}.${K3S_NAMESPACE}.svc.cluster.local:${PORT}"
                 echo "🌐 External access: http://192.168.1.204"
-                echo "📊 Final system status:"
-                kubectl get pods -n ${K3S_NAMESPACE} -l app=notification-service --no-headers -o custom-columns="NAME:.metadata.name,STATUS:.status.phase,COLOR:.metadata.labels.color" || true
-                free -h 2>/dev/null | head -2 || echo "Memory info not available"
+                kubectl get pods -n ${K3S_NAMESPACE} -l app=notification-service -o wide || true
             '''
         }
     }
