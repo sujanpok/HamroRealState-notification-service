@@ -18,6 +18,11 @@ spec:
         app: {{ .Values.appName }}
         color: {{ .Values.color }}
     spec:
+      # DNS FIX: Add these lines to fix networking issues
+      hostNetwork: true
+      dnsPolicy: Default
+      # END DNS FIX
+      
       {{- if .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml .Values.imagePullSecrets | nindent 8 }}
