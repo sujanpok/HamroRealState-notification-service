@@ -1,18 +1,17 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Values.appName }}
+  name: {{ .Values.serviceName | default .Values.appName | default "room-management-service" }}
   namespace: {{ .Release.Namespace }}
   labels:
     app: {{ .Values.appName | default "notification-service" }}
 spec:
   type: {{ .Values.service.type }}
-  loadBalancerClass: metallb.io/loadbalancer
-  loadBalancerIP: {{ .Values.service.loadBalancerIP | default "192.168.1.204" }}
+  loadBalancerIP: {{ .Values.service.loadBalancerIP | default "192.168.1.204" }}  # Fixed EXTERNAL-IP
   ports:
-    - port: {{ .Values.service.port }}
-      targetPort: {{ .Values.service.targetPort }}
-      protocol: TCP
+  - port: {{ .Values.service.port }}
+    targetPort: {{ .Values.service.targetPort }}
+    protocol: TCP
   selector:
     app: {{ .Values.appName | default "notification-service" }}
     color: {{ .Values.color }}

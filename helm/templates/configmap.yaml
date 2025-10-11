@@ -4,7 +4,7 @@ metadata:
   name: {{ .Release.Name }}-config
   namespace: {{ .Release.Namespace }}
   labels:
-    app: {{ .Values.appName | default "notification-service" }}
+    app: {{ .Values.appName | default "rnotification-service" }}
     chart: {{ .Chart.Name }}-{{ .Chart.Version }}
     release: {{ .Release.Name }}
 data:

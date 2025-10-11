@@ -4,7 +4,7 @@ services:
   frontend:
     build: .  
     image: "${DOCKER_HUB_USR}/notification-service:latest"
-    container_name: notification--microservice
+    container_name: notification-microservice
     restart: always
     ports:
       - "3004:80"
