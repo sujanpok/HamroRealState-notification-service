@@ -1,9 +1,8 @@
 replicaCount: 1
-
-appName: room-management-service
+appName: notification-service
 
 image:
-  repository: sujan1234ray/room-management-service
+  repository: sujan1234ray/notification-service
   pullPolicy: IfNotPresent
   tag: "latest"
 
@@ -12,39 +11,18 @@ color: blue
 service:
   type: LoadBalancer
   port: 80
-  targetPort: 3002
-  serviceName: room-management-service
-  loadBalancerIP: 192.168.1.201  # Fixed external IP
-  nodePort: 30081                # Fixed NodePort (optional)
-  
+  targetPort: 3004
+  loadBalancerIP: 192.168.1.204
 
-# Environment variables for ConfigMap
 env:
-  CORS_ORIGINS: "http://localhost:4200,https://pokharelsujan.info.np"
-  PORT: "3002"
+  NODE_ENV: "production"
+  PORT: "3004"
   HOST: "0.0.0.0"
-  DB_MODE: "cloud"
-  DB_HOST: "postgres"
-  DB_PORT: "5432"
-  DB_USER: "postgres"
-  DB_NAME: "neondb"
-  DB_SCHEMA: "REALSTATE"
-  LOGIN: "LOGIN_TABLE"
-  USER_PROFILE: "USER_PROFILE_TABLE"
-  CLIENT_ID: "539011910849-qk1h6i9c5t9d0bn094jaa9q6rt2k7amu.apps.googleusercontent.com"
-  REDIRECT_URI: "http://localhost:8000/oauth2callback"
-  JWT_EXPIRATION: "10m"
-  NODE_ENV: "production" # Will be overridden by Jenkins
+  EMAIL_DOMAIN: "mail.pokharelsujan.info.np"
 
-# Sensitive variables for Secret
 secrets:
-  JWT_SECRET: ""
-  DB_PASSWORD: ""
-  DATABASE_URL: ""
-  CLIENT_SECRET: ""
-  ACCESS_TOKEN: ""
-  REFRESH_TOKEN: ""
-  EXPIRY_DATE: ""
+  RESEND_API_KEY: ""
+  AUTH_HEADER_KEY: ""
 
 resources:
   limits:
