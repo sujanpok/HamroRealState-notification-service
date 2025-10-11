@@ -57,7 +57,7 @@ pipeline {
                     env.CURRENT_ACTIVE = sh(script: "kubectl get svc ${SERVICE_NAME} -n ${K3S_NAMESPACE} -o jsonpath='{.spec.selector.color}' 2>/dev/null || echo '${BLUE_LABEL}'", returnStdout: true).trim()
                     env.NEW_COLOR = (env.CURRENT_ACTIVE == BLUE_LABEL) ? GREEN_LABEL : BLUE_LABEL
                     env.NEW_RELEASE = "notification-service-${NEW_COLOR}"
-                    env.OLD_RELEASE = "notification-service-${CURRENT_ACTIVE}"
+					env.OLD_RELEASE = "notification-service-${(NEW_COLOR == BLUE_LABEL ? GREEN_LABEL : BLUE_LABEL)}"
                     echo "Current active: ${env.CURRENT_ACTIVE} | Deploying to: ${env.NEW_COLOR}"
                     echo "New release: ${env.NEW_RELEASE} | Old release: ${env.OLD_RELEASE}"
                 }
@@ -100,16 +100,22 @@ pipeline {
         }
 
         stage('🧹 Cleanup Conflicting Resources') {
-            script {
-                echo "🧹 Pre-deployment cleanup (removing all blue resources)..."
-                sh """
-                    kubectl delete deployment notification-service-blue -n default --ignore-not-found=true
-                    kubectl delete service notification-service -n default --ignore-not-found=true
-                    kubectl delete secret notification-service-blue-secret -n default --ignore-not-found=true
-                    kubectl delete configmap notification-service-blue-config -n default --ignore-not-found=true
-                    sleep 3
-                    echo "✅ Cleanup completed"
-                """
+            steps {
+                script {
+                    echo "🧹 Pre-deployment cleanup to avoid Helm conflicts..."
+                    sh """
+                        # Delete conflicting service if it exists
+                        kubectl delete service ${SERVICE_NAME} -n ${K3S_NAMESPACE} --ignore-not-found=true
+                        
+                        # Clean up old release if it exists
+                        helm uninstall ${OLD_RELEASE} -n ${K3S_NAMESPACE} --ignore-not-found=true || true
+                        
+                        # Wait for cleanup to complete
+                        sleep 3
+                        
+                        echo "✅ Cleanup completed"
+                    """
+                }
             }
         }
 

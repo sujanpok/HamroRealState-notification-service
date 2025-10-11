@@ -4,6 +4,6 @@ import { send } from '../controllers/emailController.js';
 
 const router = express.Router();
 
-router.post('/send', send);
+router.post('/send/api', send);
 
 export default router;
