@@ -7,11 +7,12 @@ metadata:
     app: {{ .Values.appName | default "notification-service" }}
 spec:
   type: {{ .Values.service.type }}
-  loadBalancerIP: {{ .Values.service.loadBalancerIP | default "192.168.1.204" }}  # Fixed EXTERNAL-IP
+  loadBalancerClass: metallb.io/loadbalancer
+  loadBalancerIP: {{ .Values.service.loadBalancerIP | default "192.168.1.204" }}
   ports:
-  - port: {{ .Values.service.port }}
-    targetPort: {{ .Values.service.targetPort }}
-    protocol: TCP
+    - port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.targetPort }}
+      protocol: TCP
   selector:
     app: {{ .Values.appName | default "notification-service" }}
     color: {{ .Values.color }}

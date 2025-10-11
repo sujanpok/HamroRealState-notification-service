@@ -1,5 +1,4 @@
 replicaCount: 1
-
 appName: notification-service
 
 image:
@@ -13,9 +12,7 @@ service:
   type: LoadBalancer
   port: 80
   targetPort: 3004
-  serviceName: room-management-service
   loadBalancerIP: 192.168.1.204
-  nodePort: 30084                # Fixed NodePort (optional)
 
 env:
   NODE_ENV: "production"
@@ -32,17 +29,16 @@ resources:
     cpu: 500m
     memory: 512Mi
   requests:
-    cpu: 250m
+    cpu: 100m
     memory: 256Mi
 
-# Use root path "/" instead of "/health" to avoid 401 errors
 livenessProbe:
   httpGet:
     path: /
     port: 3004
-  initialDelaySeconds: 20
+  initialDelaySeconds: 30
   periodSeconds: 10
-  timeoutSeconds: 3
+  timeoutSeconds: 5
   failureThreshold: 3
   successThreshold: 1
 
@@ -50,7 +46,7 @@ readinessProbe:
   httpGet:
     path: /
     port: 3004
-  initialDelaySeconds: 5
+  initialDelaySeconds: 15
   periodSeconds: 5
   timeoutSeconds: 3
   failureThreshold: 3
@@ -63,5 +59,4 @@ nodeSelector:
   kubernetes.io/arch: arm64
 
 tolerations: []
-
 affinity: {}
