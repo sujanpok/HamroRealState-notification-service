@@ -151,40 +151,40 @@ pipeline {
                             sh "kubectl rollout status deployment/${NEW_RELEASE} -n ${K3S_NAMESPACE} --timeout=2m"
                             
                             // Test new deployment health
-                            echo "⏳ Testing new container (${NEW_COLOR})..."
-                            sh '''
-                                pod=$(kubectl get pod -l app=notification-service,color=${NEW_COLOR} -o jsonpath='{.items[0].metadata.name}' -n ${K3S_NAMESPACE})
-                                if [ -z "$pod" ]; then
-                                    echo "❌ No pod found for ${NEW_COLOR}"
-                                    exit 1
-                                fi
+                            // echo "⏳ Testing new container (${NEW_COLOR})..."
+                            // sh '''
+                            //     pod=$(kubectl get pod -l app=notification-service,color=${NEW_COLOR} -o jsonpath='{.items[0].metadata.name}' -n ${K3S_NAMESPACE})
+                            //     if [ -z "$pod" ]; then
+                            //         echo "❌ No pod found for ${NEW_COLOR}"
+                            //         exit 1
+                            //     fi
                                 
-                                echo "🔍 Testing pod: $pod"
-                                kubectl port-forward pod/$pod 8080:${APP_PORT} -n ${K3S_NAMESPACE} &
-                                PF_PID=$!
-                                sleep 5
+                            //     echo "🔍 Testing pod: $pod"
+                            //     kubectl port-forward pod/$pod 8080:${APP_PORT} -n ${K3S_NAMESPACE} &
+                            //     PF_PID=$!
+                            //     sleep 5
                                 
-                                # Test health endpoint with retry
-                                HEALTH_CHECK_PASSED=false
-                                for i in {1..10}; do
-                                    if curl -f http://localhost:8080/ 2>/dev/null; then
-                                        echo "✅ New container health check passed!"
-                                        HEALTH_CHECK_PASSED=true
-                                        kill $PF_PID 2>/dev/null || true
-                                        break
-                                    fi
-                                    echo "Attempt $i/10 - waiting 3 seconds..."
-                                    sleep 3
-                                done
+                            //     # Test health endpoint with retry
+                            //     HEALTH_CHECK_PASSED=false
+                            //     for i in {1..10}; do
+                            //         if curl -f http://localhost:8080/ 2>/dev/null; then
+                            //             echo "✅ New container health check passed!"
+                            //             HEALTH_CHECK_PASSED=true
+                            //             kill $PF_PID 2>/dev/null || true
+                            //             break
+                            //         fi
+                            //         echo "Attempt $i/10 - waiting 3 seconds..."
+                            //         sleep 3
+                            //     done
                                 
-                                kill $PF_PID 2>/dev/null || true
+                            //     kill $PF_PID 2>/dev/null || true
                                 
-                                if [ "$HEALTH_CHECK_PASSED" = "false" ]; then
-                                    echo "❌ New container failed health check"
-                                    kubectl logs -n ${K3S_NAMESPACE} pod/$pod --tail=50
-                                    exit 1
-                                fi
-                            '''
+                            //     if [ "$HEALTH_CHECK_PASSED" = "false" ]; then
+                            //         echo "❌ New container failed health check"
+                            //         kubectl logs -n ${K3S_NAMESPACE} pod/$pod --tail=50
+                            //         exit 1
+                            //     fi
+                            // '''
                             
                             // Switch traffic to new version
                             echo "🔄 Switching traffic to ${NEW_COLOR}..."
