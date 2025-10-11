@@ -215,44 +215,18 @@ pipeline {
             }
         }
 
-        stage('🧹 Deep Cleanup') {
-            steps {
-                sh '''
-                    echo "🧹 Starting comprehensive cleanup..."
-                    
-                    echo "📦 Disk usage BEFORE cleanup:"
-                    df -h /var/lib/docker | tail -1 || echo "Docker directory not found"
-                    docker system df || echo "Docker system df failed"
-                    
-                    echo "🗑️ Removing old and dangling images..."
-                    docker image prune -a -f --filter until=24h || echo "Image prune failed"
-                    
-                    echo "🗑️ Removing stopped containers..."
-                    docker container prune -f --filter until=1h || echo "Container prune failed"
-                    
-                    echo "🗑️ Removing unused networks..."
-                    docker network prune -f || echo "Network prune failed"
-                    
-                    echo "🗑️ Removing unused volumes..."
-                    docker volume prune -f || echo "Volume prune failed"
-                    
-                    echo "🗑️ Cleaning build cache..."
-                    docker builder prune -a -f --filter until=6h || echo "Builder prune failed"
-                    
-                    echo "🗑️ Removing old Docker Hub images (keep latest 2)..."
-                    docker images ${DOCKER_IMAGE} --format "{{.ID}}" | tail -n +3 | xargs -r docker rmi -f || echo "Old image cleanup completed"
-                    
-                    echo "🗑️ Force cleanup of everything unused..."
-                    docker system prune -a -f --volumes || echo "System prune completed"
-                    
-                    echo "📦 Disk usage AFTER cleanup:"
-                    df -h /var/lib/docker | tail -1 || echo "Docker directory not found"
-                    docker system df || echo "Docker system df failed"
-                    
-                    echo "🎯 Cleanup completed!"
-                '''
-            }
+    stage('🧹 Deep Cleanup') {
+        steps {
+            sh '''
+                # Keep last 3 Docker Hub images
+                docker images ${DOCKER_IMAGE} --format "{{.ID}}" | tail -n +4 | xargs -r docker rmi -f 2>/dev/null || true
+            
+                # Single cleanup excluding volumes
+                docker system prune -f --filter until=168h || true
+            '''
         }
+    }
+
     }
 
     post {
